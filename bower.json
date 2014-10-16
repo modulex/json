@@ -7,7 +7,7 @@
         "url": "http://github.com/kissyteam/json.git"
     },
     "dependencies": {
-        "modulex": "modulex#master"
+        "modulex": "*"
     },
     "ignore": [
         "tests/**/*",
