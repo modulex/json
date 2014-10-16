@@ -1,3 +1,8 @@
+/*
+Copyright 2014, modulex-json@1.0.2
+MIT Licensed
+build time: Thu, 16 Oct 2014 03:09:56 GMT
+*/
 modulex.add("json", [], function(require, exports, module) {
 
 /*
@@ -1207,7 +1212,7 @@ jsonParse = function (exports) {
 json = function (exports) {
   var stringify = jsonStringify, parse = jsonParse;
   exports = {
-    version: '1.0.0',
+    version: '1.0.2',
     stringify: stringify,
     parse: parse
   };
