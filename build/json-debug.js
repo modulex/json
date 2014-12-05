@@ -1,7 +1,7 @@
 /*
-Copyright 2014, modulex-json@1.0.3
+Copyright 2014, modulex-json@1.0.4
 MIT Licensed
-build time: Thu, 16 Oct 2014 03:55:44 GMT
+build time: Fri, 05 Dec 2014 09:22:44 GMT
 */
 modulex.add("json", [], function(require, exports, module) {
 
@@ -104,14 +104,19 @@ jsonUtil = function (exports) {
 }();
 jsonParser = function (exports) {
   var parser = function (undefined) {
-    var parser = {}, GrammarConst = {
-        'SHIFT_TYPE': 1,
-        'REDUCE_TYPE': 2,
-        'ACCEPT_TYPE': 0,
-        'TYPE_INDEX': 0,
-        'PRODUCTION_INDEX': 1,
-        'TO_INDEX': 2
-      };
+    var parser = {};
+    var GrammarConst = {
+      'SHIFT_TYPE': 1,
+      'REDUCE_TYPE': 2,
+      'ACCEPT_TYPE': 0,
+      'TYPE_INDEX': 0,
+      'PRODUCTION_INDEX': 1,
+      'TO_INDEX': 2
+    };
+    function peekStack(stack, n) {
+      n = n || 1;
+      return stack[stack.length - n];
+    }
     function mix(to, from) {
       for (var f in from) {
         to[f] = from[f];
@@ -152,12 +157,13 @@ jsonParser = function (exports) {
       var self = this;
       self.rules = [];
       mix(self, cfg);
-      self.resetInput(self.input);
+      self.resetInput(self.input, self.filename);
     };
     Lexer.prototype = {
-      'resetInput': function (input) {
+      'resetInput': function (input, filename) {
         mix(this, {
           input: input,
+          filename: filename,
           matched: '',
           stateStack: [Lexer.STATIC.INITIAL],
           match: '',
@@ -200,8 +206,8 @@ jsonParser = function (exports) {
       'showDebugInfo': function () {
         var self = this, DEBUG_CONTEXT_LIMIT = Lexer.STATIC.DEBUG_CONTEXT_LIMIT, matched = self.matched, match = self.match, input = self.input;
         matched = matched.slice(0, matched.length - match.length);
-        var past = (matched.length > DEBUG_CONTEXT_LIMIT ? '...' : '') + matched.slice(0 - DEBUG_CONTEXT_LIMIT).replace(/\n/, ' '), next = match + input;
-        next = next.slice(0, DEBUG_CONTEXT_LIMIT) + (next.length > DEBUG_CONTEXT_LIMIT ? '...' : '');
+        var past = (matched.length > DEBUG_CONTEXT_LIMIT ? '...' : '') + matched.slice(0 - DEBUG_CONTEXT_LIMIT).replace(/\n/g, ' '), next = match + input;
+        next = next.slice(0, DEBUG_CONTEXT_LIMIT).replace(/\n/g, ' ') + (next.length > DEBUG_CONTEXT_LIMIT ? '...' : '');
         return past + next + '\n' + new Array(past.length + 1).join('-') + '^';
       },
       'mapSymbol': function mapSymbolForCodeGen(t) {
@@ -222,14 +228,19 @@ jsonParser = function (exports) {
         }
       },
       'lex': function () {
-        var self = this, input = self.input, i, rule, m, ret, lines, rules = self.getCurrentRules();
+        var self = this;
+        var input = self.input;
+        var rules = self.getCurrentRules();
+        var i, rule, m, ret, lines;
         self.match = self.text = '';
         if (!input) {
           return self.mapSymbol(Lexer.STATIC.END_TAG);
         }
         for (i = 0; i < rules.length; i++) {
           rule = rules[i];
-          var regexp = rule.regexp || rule[1], token = rule.token || rule[0], action = rule.action || rule[2] || undefined;
+          var regexp = rule.regexp || rule[1];
+          var token = rule.token || rule[0];
+          var action = rule.action || rule[2] || undefined;
           if (m = input.match(regexp)) {
             lines = m[0].match(/\n.*/g);
             if (lines) {
@@ -237,7 +248,7 @@ jsonParser = function (exports) {
             }
             mix(self, {
               firstLine: self.lastLine,
-              lastLine: self.lineNumber + 1,
+              lastLine: self.lineNumber,
               firstColumn: self.lastColumn,
               lastColumn: lines ? lines[lines.length - 1].length - 1 : self.lastColumn + m[0].length
             });
@@ -317,7 +328,7 @@ jsonParser = function (exports) {
         ],
         [
           'j',
-          /^true|false/,
+          /^(true|false)/,
           0
         ],
         [
@@ -511,14 +522,14 @@ jsonParser = function (exports) {
         '0': {
           'n': 7,
           'o': 8,
-          'q': 9,
-          'p': 10
+          'p': 9,
+          'q': 10
         },
         '2': {
           'o': 12,
-          'r': 13,
-          'q': 9,
-          'p': 10
+          'p': 9,
+          'q': 10,
+          'r': 13
         },
         '3': {
           's': 16,
@@ -526,13 +537,13 @@ jsonParser = function (exports) {
         },
         '18': {
           'o': 23,
-          'q': 9,
-          'p': 10
+          'p': 9,
+          'q': 10
         },
         '20': {
           'o': 24,
-          'q': 9,
-          'p': 10
+          'p': 9,
+          'q': 10
         },
         '21': { 's': 25 }
       },
@@ -700,37 +711,37 @@ jsonParser = function (exports) {
         '9': {
           'a': [
             2,
-            5
+            4
           ],
           'f': [
             2,
-            5
+            4
           ],
           'c': [
             2,
-            5
+            4
           ],
           'h': [
             2,
-            5
+            4
           ]
         },
         '10': {
           'a': [
             2,
-            4
+            5
           ],
           'f': [
             2,
-            4
+            5
           ],
           'c': [
             2,
-            4
+            5
           ],
           'h': [
             2,
-            4
+            5
           ]
         },
         '11': {
@@ -960,10 +971,20 @@ jsonParser = function (exports) {
       }
     };
     parser.parse = function parse(input, filename) {
-      var self = this, lexer = self.lexer, state, symbol, action, table = self.table, gotos = table.gotos, tableAction = table.action, productions = self.productions, valueStack = [null], prefix = filename ? 'in file: ' + filename + ' ' : '', stack = [0];
-      lexer.resetInput(input);
+      var state, symbol, ret, action, $$;
+      var self = this;
+      var lexer = self.lexer;
+      var table = self.table;
+      var gotos = table.gotos;
+      var tableAction = table.action;
+      var productions = self.productions;
+      var prefix = filename ? 'in file: ' + filename + ' ' : '';
+      var valueStack = [];
+      var stateStack = [0];
+      var symbolStack = [];
+      lexer.resetInput(input, filename);
       while (1) {
-        state = stack[stack.length - 1];
+        state = peekStack(stateStack);
         if (!symbol) {
           symbol = lexer.lex();
         }
@@ -973,28 +994,39 @@ jsonParser = function (exports) {
           action = null;
         }
         if (!action) {
-          var expected = [], error;
+          var expected = [];
+          var error;
           if (tableAction[state]) {
-            for (var symbolForState in tableAction[state]) {
-              expected.push(self.lexer.mapReverseSymbol(symbolForState));
-            }
+            each(tableAction[state], function (v, symbolForState) {
+              action = v[GrammarConst.TYPE_INDEX];
+              var map = [];
+              map[GrammarConst.SHIFT_TYPE] = 'shift';
+              map[GrammarConst.REDUCE_TYPE] = 'reduce';
+              map[GrammarConst.ACCEPT_TYPE] = 'accept';
+              expected.push(map[action] + ':' + self.lexer.mapReverseSymbol(symbolForState));
+            });
           }
           error = prefix + 'syntax error at line ' + lexer.lineNumber + ':\n' + lexer.showDebugInfo() + '\n' + 'expect ' + expected.join(', ');
           throw new Error(error);
         }
         switch (action[GrammarConst.TYPE_INDEX]) {
         case GrammarConst.SHIFT_TYPE:
-          stack.push(symbol);
+          symbolStack.push(symbol);
           valueStack.push(lexer.text);
-          stack.push(action[GrammarConst.TO_INDEX]);
+          stateStack.push(action[GrammarConst.TO_INDEX]);
           symbol = null;
           break;
         case GrammarConst.REDUCE_TYPE:
-          var production = productions[action[GrammarConst.PRODUCTION_INDEX]], reducedSymbol = production.symbol || production[0], reducedAction = production.action || production[2], reducedRhs = production.rhs || production[1], len = reducedRhs.length, i = 0, ret, $$ = valueStack[valueStack.length - len];
+          var production = productions[action[GrammarConst.PRODUCTION_INDEX]];
+          var reducedSymbol = production.symbol || production[0];
+          var reducedAction = production.action || production[2];
+          var reducedRhs = production.rhs || production[1];
+          var len = reducedRhs.length;
+          $$ = peekStack(valueStack, len);
           ret = undefined;
           self.$$ = $$;
-          for (; i < len; i++) {
-            self['$' + (len - i)] = valueStack[valueStack.length - 1 - i];
+          for (var i = 0; i < len; i++) {
+            self['$' + (len - i)] = peekStack(valueStack, i + 1);
           }
           if (reducedAction) {
             ret = reducedAction.call(self);
@@ -1004,12 +1036,14 @@ jsonParser = function (exports) {
           } else {
             $$ = self.$$;
           }
-          stack = stack.slice(0, -1 * len * 2);
-          valueStack = valueStack.slice(0, -1 * len);
-          stack.push(reducedSymbol);
+          var reverseIndex = len * -1;
+          stateStack.splice(reverseIndex, len);
+          valueStack.splice(reverseIndex, len);
+          symbolStack.splice(reverseIndex, len);
+          symbolStack.push(reducedSymbol);
           valueStack.push($$);
-          var newState = gotos[stack[stack.length - 2]][stack[stack.length - 1]];
-          stack.push(newState);
+          var newState = gotos[peekStack(stateStack)][reducedSymbol];
+          stateStack.push(newState);
           break;
         case GrammarConst.ACCEPT_TYPE:
           return $$;
@@ -1212,7 +1246,7 @@ jsonParse = function (exports) {
 json = function (exports) {
   var stringify = jsonStringify, parse = jsonParse;
   exports = {
-    version: '1.0.3',
+    version: '1.0.4',
     stringify: stringify,
     parse: parse
   };

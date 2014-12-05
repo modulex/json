@@ -73,4 +73,19 @@ gulp.task('tag',function(done){
     
 });
 
+gulp.task('parser', function (callback) {
+  require('child_process').exec('node node_modules/kison/bin/kison -g lib/json/parser-grammar.kison',
+    function (error, stdout, stderr) {
+      if (stdout) {
+        console.log('stdout: ' + stdout);
+      }
+      if (stderr) {
+        console.log('stderr: ' + stderr);
+      }
+      if (error) {
+        console.log('exec error: ' + error);
+      }
+    }).on('exit', callback);
+});
+
 gulp.task('default', ['build']);
