@@ -1,65 +1,45 @@
 {
   "name": "modulex-json",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "author": "yiminghe <yiminghe@gmail.com>",
   "engines": {
-    "node": "~0.10"
+    "node": ">=0.10"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "http://github.com/kissyteam/json.git"
-  },
-  "testling": {
-    "server": "server.js",
-    "html": "tests/runner.html",
-    "browsers": [
-      "ie/6..latest",
-      "chrome/latest",
-      "firefox/latest",
-      "safari/latest",
-      "iphone/6..lastest",
-      "ipad/6..latest",
-      "android-browser/latest"
-    ]
+    "url": "http://github.com/modulex/json.git"
   },
   "devDependencies": {
-    "body-parser": "^1.6.5",
-    "chai": "^1.9.1",
-    "express": "^4.8.5",
+    "expect.js": "^0.3.1",
     "gulp": "^3.8.7",
     "gulp-clean": "^0.3.1",
     "gulp-filter": "^1.0.0",
     "gulp-footer": "^1.0.5",
     "gulp-header": "^1.0.5",
-    "gulp-jscs": "^1.1.0",
-    "gulp-jshint": "^1.8.4",
     "gulp-kclean": "^0.0.13",
-    "gulp-modulex": "^1.0.0",
+    "gulp-modulex": "^2.0.1",
     "gulp-rename": "^1.2.0",
     "gulp-replace": "^0.4.0",
     "gulp-uglify": "^0.3.1",
     "gulp-util": "^3.0.0",
     "gulp-wrapper": "^0.1.5",
-    "jshint": "^2.5.5",
-    "jshint-stylish": "^0.4.0",
     "kison": "^0.3.6",
-    "mocha": "^1.21.4",
-    "node-jscover": "^0.6.8",
-    "node-jscover-coveralls": "^1.0.10",
-    "node-jscover-handler": "^1.0.3",
     "precommit-hook": "^1.0.7",
-    "serve-index": "^1.1.6",
-    "serve-static": "^1.5.3"
+    "rc-server": "^1.5.10",
+    "rc-tools": "^1.1.5"
   },
   "precommit": [
     "lint"
   ],
+  "config": {
+    "port": "8012"
+  },
   "scripts": {
-    "publish": "gulp tag",
-    "lint": "gulp lint",
-    "browser-test": "mocha-phantomjs http://localhost:8008/tests/runner.html",
-    "browser-test-build": "mocha-phantomjs http://localhost:8008/tests/runner.html?build",
-    "browser-test-cover": "mocha-phantomjs -R node_modules/node-jscover/lib/reporters/mocha/console http://localhost:8008/tests/runner.html?coverage"
+    "start": "node --harmony ./node_modules/.bin/rc-server",
+    "publish": "rc-tools run tag",
+    "lint": "rc-tools run lint",
+    "browser-test": "rc-tools run browser-test",
+    "browser-test-cover": "rc-tools run browser-test-cover"
   }
 }

@@ -9,9 +9,6 @@ var src = path.resolve(process.cwd(), 'lib');
 var build = path.resolve(process.cwd(), 'build');
 var clean = require('gulp-clean');
 var uglify = require('gulp-uglify');
-var jshint = require('gulp-jshint');
-var stylish = require('jshint-stylish');
-var jscs = require('gulp-jscs');
 var replace = require('gulp-replace');
 var wrapper = require('gulp-wrapper');
 var date = new Date();
@@ -21,21 +18,13 @@ packageInfo.license+' Licensed',
 'build time: '+(date.toGMTString()),
 '*/',''].join('\n');
 
-gulp.task('lint', function () {
-    return gulp.src(['./lib/**/*.js','!**/parser.js'])
-        .pipe(jshint())
-        .pipe(jshint.reporter(stylish))
-        .pipe(jshint.reporter('fail'))
-        .pipe(jscs());
-});
-
 gulp.task('clean', function () {
     return gulp.src(build, {
         read: false
     }).pipe(clean());
 });
 
-gulp.task('build', ['lint'], function () {
+gulp.task('build',function () {
     return gulp.src('./lib/json.js')
         .pipe(modulex({
             modulex: {
@@ -64,13 +53,6 @@ gulp.task('build', ['lint'], function () {
         .pipe(uglify())
         .pipe(rename('json.js'))
         .pipe(gulp.dest(build));
-});
-
-gulp.task('tag',function(done){
-    var cp = require('child_process');
-    var version = packageInfo.version;
-    cp.exec('git tag '+version +' | git push origin '+version+':'+version+' | git push origin master:master',done);
-    
 });
 
 gulp.task('parser', function (callback) {
